@@ -94,7 +94,7 @@ kbd { border: 1px solid var(--line-2); border-bottom-width: 2px; border-radius: 
 /* background logo watermark */
 .bg-logo {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background: url("../assets/logo.jpg") no-repeat center 55% / min(62vh, 62vw);
+  background: var(--logo-url, none) no-repeat center 55% / min(62vh, 62vw);
   opacity: var(--logo-op); filter: var(--logo-filter) grayscale(1); mix-blend-mode: var(--logo-blend);
 }
 body.in-app .bg-logo { background-position: calc(50% + 130px) 55%; }
@@ -843,3 +843,8 @@ body.auth { background: radial-gradient(1200px 600px at 50% -10%, var(--primary-
   .p-garden div { border: 1px solid #ccc; border-radius: 10px; padding: 10px; text-align: center; }
   .p-garden span { display: block; font-size: 34pt; }
 }
+
+/* logo picker */
+.logo-pick { display: flex; gap: 14px; align-items: center; }
+.logo-pick img { width: 72px; height: 72px; object-fit: contain; border-radius: 50%; background: #fff; padding: 5px; box-shadow: 0 0 0 1px var(--line-2); flex: none; }
+.logo-pick .hint { margin: 6px 0 0; }

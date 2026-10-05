@@ -208,15 +208,71 @@
     if (e.ctrlKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); lock('Locked.'); }
   }
 
+  // ---------------- school logo ----------------
+  // The logo is not sensitive, so it is kept (as a small data URL) in the plaintext
+  // vault metadata: it can show on the login screen and travels with backups.
+  const DEFAULT_LOGO = 'assets/counselbook-logo.svg';
+  function logoSrc() { return (CB.META && CB.META.logo) || DEFAULT_LOGO; }
+  function applyLogo() {
+    const src = logoSrc();
+    document.documentElement.style.setProperty('--logo-url', `url("${src}")`);
+    let link = document.querySelector('link[rel="icon"]');
+    if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+    link.href = src;
+  }
+  /** Read an image file and shrink it to at most 360px so it stays small. */
+  function readLogo(file) {
+    return new Promise((resolve, reject) => {
+      if (!file || !/^image\//.test(file.type)) return reject(new Error('Please choose an image file (PNG, JPG, SVG).'));
+      if (file.size > 8 * 1024 * 1024) return reject(new Error('The image is larger than 8 MB.'));
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const max = 360, w = img.naturalWidth || max, h = img.naturalHeight || max;
+        const k = Math.min(1, max / Math.max(w, h));
+        const c = document.createElement('canvas');
+        c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        resolve(file.type === 'image/jpeg' ? c.toDataURL('image/jpeg', 0.9) : c.toDataURL('image/png'));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('This image could not be read.')); };
+      img.src = url;
+    });
+  }
+  /** Logo chooser widget. onChange(dataUrl | null) */
+  function logoPicker(host, current, onChange, disabled) {
+    let val = current || null;
+    const draw = () => {
+      host.innerHTML = `<div class="logo-pick"><img src="${esc(val || DEFAULT_LOGO)}" alt="School logo preview">
+        <div><div class="row wrap">${disabled ? '' : `<button type="button" class="btn" data-lp="pick">${icon('upload')} ${val ? 'Change logo' : 'Upload logo'}</button>${val ? `<button type="button" class="btn ghost" data-lp="clear">${icon('trash')} Remove</button>` : ''}`}</div>
+        <p class="hint">${val ? 'Your school logo.' : 'No logo yet – the CounselBook emblem is used.'} PNG or JPG, ideally square. Shown on the login screen, as a faint background and on printed reports.</p></div></div>`;
+      const pick = host.querySelector('[data-lp="pick"]');
+      if (pick) pick.onclick = () => {
+        const inp = document.createElement('input');
+        inp.type = 'file'; inp.accept = 'image/png,image/jpeg,image/svg+xml,image/webp,image/gif';
+        inp.onchange = async () => {
+          try { val = await readLogo(inp.files[0]); draw(); onChange(val); } catch (e) { toast(e.message, 'err', 5000); }
+        };
+        inp.click();
+      };
+      const clr = host.querySelector('[data-lp="clear"]');
+      if (clr) clr.onclick = () => { val = null; draw(); onChange(null); };
+    };
+    draw();
+  }
+  Object.assign(CB, { logoSrc, applyLogo, logoPicker, readLogo, DEFAULT_LOGO });
+
   // ---------------- login ----------------
   function bgLayer() { return '<div class="bg-logo" aria-hidden="true"></div>'; }
   function renderLogin(msg, lastUser) {
     const M = CB.META;
+    applyLogo();
     document.body.className = 'auth';
     document.body.innerHTML = `${bgLayer()}
     <div class="auth-wrap">
       <div class="auth-card">
-        <img class="auth-logo" src="assets/logo.jpg" alt="School logo">
+        <img class="auth-logo" src="${esc(logoSrc())}" alt="School logo">
         <div class="auth-school">${esc(M.school || '')}</div>
         <h1 class="auth-title">CounselBook</h1>
         <p class="auth-sub">Student counselling record &amp; reports</p>
@@ -357,6 +413,7 @@
   // ---------------- shell ----------------
   function renderShell() {
     const s = CB.S, set = s.data.settings;
+    applyLogo();
     document.body.className = 'in-app';
     const nav = MODULES.filter((m) => m.route && can(m.k)).map((m) => `<a href="#/${m.route}" data-r="${m.route}">${icon(m.icon)}<span>${m.label}</span></a>` + (m.k === 'activities' ? `<a href="#/games" data-r="games">${icon('heart')}<span>Games &amp; art</span></a>` : '')).join('')
       + (can('admin') ? `<a href="#/users" data-r="users">${icon('usercog')}<span>Users &amp; access</span></a>` : '');
@@ -364,7 +421,7 @@
     document.body.innerHTML = `${bgLayer()}
     <div class="app">
       <aside class="side" id="side">
-        <div class="brand"><img src="assets/logo.jpg" alt=""><div><b>CounselBook</b><small title="${esc(set.schoolName)}">${esc(set.schoolName)}</small></div></div>
+        <div class="brand"><img src="${esc(logoSrc())}" alt=""><div><b>CounselBook</b><small title="${esc(set.schoolName)}">${esc(set.schoolName)}</small></div></div>
         <nav class="nav">${nav}</nav>
         <div class="side-foot">
           <button class="user-chip" id="me-btn" title="My account"><span class="avatar sm">${esc((s.user.displayName || s.user.username).slice(0, 1).toUpperCase())}</span><span><b>${esc(s.user.displayName || s.user.username)}</b><small>${esc((PRESETS[s.user.role] || PRESETS.custom).label)}</small></span></button>
@@ -450,7 +507,7 @@
   function printHTML(html, title) {
     const set = CB.S ? CB.S.data.settings : { schoolName: CB.META.school };
     const root = $('#print-root');
-    root.innerHTML = `<div class="p-head"><img src="assets/logo.jpg" alt=""><div><div class="p-school">${esc(set.schoolName)}</div>${set.motto ? `<div class="p-motto">${esc(set.motto)}</div>` : ''}<div class="p-sub">Counselling Department · CounselBook</div></div></div>${html}
+    root.innerHTML = `<div class="p-head"><img src="${esc(logoSrc())}" alt=""><div><div class="p-school">${esc(set.schoolName)}</div>${set.motto ? `<div class="p-motto">${esc(set.motto)}</div>` : ''}<div class="p-sub">Counselling Department · CounselBook</div></div></div>${html}
       <div class="p-foot">Printed ${fmtDate(isoDate())} by ${esc(CB.S ? CB.S.user.displayName : '')}</div>`;
     const old = document.title;
     document.title = title || 'CounselBook';

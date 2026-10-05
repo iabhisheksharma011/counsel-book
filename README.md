@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.jpg" alt="School logo" width="110">
+  <img src="assets/counselbook-logo.svg" alt="CounselBook" width="110">
 </p>
 
 <h1 align="center">CounselBook</h1>
@@ -97,15 +97,15 @@ The games save no child data, only high scores on that computer.
 1. **Download** this repository (green **Code** button → **Download ZIP**) and unzip it, for example to `D:\CounselBook`. Keep all the files together.
 2. Double-click **`Start CounselBook.bat`**. It opens the app in Microsoft Edge in app mode.
 3. *(Optional)* Double-click **`Create Desktop Shortcut.bat`** to add a CounselBook icon to the desktop.
-4. On first run, enter the **school name** and create the **Admin** and **Counsellor** logins.
+4. On first run, enter the **school name**, optionally upload your **school logo**, and create the **Admin** and **Counsellor** logins.
 5. **Write down the recovery key** that appears. It is shown only once.
 
 Tick *"Add a few sample students"* during setup to explore with demo data. You can remove it later in **Settings**.
 
 > **Requirements:** Windows 10 or 11 with Microsoft Edge (pre-installed). Google Chrome also works. No admin rights, installation or internet connection needed.
 
-### Using your own logo
-Replace `assets/logo.jpg` with your school's logo (a square image works best). It appears on the login screen, as a faint background watermark, and on printed reports.
+### Adding your school logo
+Upload the logo during first-run setup, or later in **Settings → School → School logo**. PNG or JPG, ideally square; it is resized automatically. It appears on the login screen, in the sidebar, as a faint background watermark and on printed reports and slides. Until a logo is added, the CounselBook emblem is used. The logo is stored on that computer (and in backups), never in this repository.
 
 ## Where is the data stored?
 
@@ -121,7 +121,7 @@ counselbook/
 ├── Start CounselBook.bat      Launcher (Edge app mode, private profile)
 ├── Create Desktop Shortcut.bat
 ├── README.txt                 Plain-text guide for counsellors
-├── assets/logo.jpg            School logo
+├── assets/counselbook-logo.svg  Default emblem (school logo is uploaded in the app)
 ├── css/app.css                All styles (light/dark, print)
 ├── js/
 │   ├── store.js               IndexedDB + AES-GCM encryption, key wrapping

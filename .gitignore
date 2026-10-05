@@ -3,3 +3,8 @@
 *.log
 Thumbs.db
 desktop.ini
+
+# school logos are uploaded inside the app, never committed
+logo.jpg
+logo.png
+assets/logo.*

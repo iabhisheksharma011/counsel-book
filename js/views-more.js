@@ -126,7 +126,7 @@
     const top = R.tags[0];
     const busiest = R.months.slice().sort((a, b) => b.count - a.count)[0];
     const slides = [
-      `<div class="sl-title"><img src="assets/logo.jpg" alt=""><h1>${esc(set.schoolName)}</h1><h2>Counselling Department Report</h2><p>${esc(label)}</p>${set.counsellorName ? `<p class="muted">Presented by ${esc(set.counsellorName)}</p>` : ''}</div>`,
+      `<div class="sl-title"><img src="${esc(CB.logoSrc())}" alt=""><h1>${esc(set.schoolName)}</h1><h2>Counselling Department Report</h2><p>${esc(label)}</p>${set.counsellorName ? `<p class="muted">Presented by ${esc(set.counsellorName)}</p>` : ''}</div>`,
       `<h2 class="sl-h">At a glance</h2><div class="sl-stats">
         <div><b>${R.count}</b><span>counselling sessions</span></div><div><b>${fmtHours(R.mins)}</b><span>hours with students</span></div>
         <div><b>${R.seen}</b><span>students supported</span></div><div><b>${R.closed}</b><span>cases closed</span></div>
@@ -135,7 +135,7 @@
       `<h2 class="sl-h">What students came to us about</h2><div class="sl-chart">${R.tags.length ? UI.hbarChart(R.tags.slice(0, 10).map((t) => ({ label: t.label, value: t.sessions }))) : '<p>No data</p>'}</div>${top ? `<p class="sl-note">Most common concern: <b>${esc(top.label)}</b> (${top.students} students).</p>` : ''}`,
       `<h2 class="sl-h">Students supported by class</h2><div class="sl-chart">${R.classes.length ? UI.hbarChart(R.classes.map((c) => ({ label: c.label === 'Unknown' ? 'Unknown' : 'Class ' + c.label, value: c.students })), { color: 'var(--series-7)' }) : '<p>No data</p>'}</div>`,
       `<h2 class="sl-h">How we worked</h2><div class="sl-two"><div><h3>Session types</h3>${UI.donutChart(R.types, { centerLabel: 'sessions' })}</div><div><h3>Who referred students</h3>${UI.donutChart(R.referrals, { centerLabel: 'students' })}</div></div>`,
-      `<div class="sl-title"><img src="assets/logo.jpg" alt=""><h1>Thank you</h1><p>All figures are anonymised. Individual student records remain confidential with the counsellor.</p></div>`,
+      `<div class="sl-title"><img src="${esc(CB.logoSrc())}" alt=""><h1>Thank you</h1><p>All figures are anonymised. Individual student records remain confidential with the counsellor.</p></div>`,
     ];
     let i = 0;
     const ov = document.createElement('div');
@@ -475,6 +475,7 @@
       <section class="card"><h2 class="card-t">${icon('home')} School</h2><form id="set-school">
         <label class="fld"><span>Name of the school</span><input class="input" name="schoolName" value="${esc(set.schoolName)}" required ${dis}></label>
         <label class="fld"><span>Motto</span><input class="input" name="motto" value="${esc(set.motto)}" ${dis}></label>
+        <div class="fld"><span>School logo</span><div id="set-lp"></div></div>
         <label class="fld"><span>Counsellor name (shown on reports)</span><input class="input" name="counsellorName" value="${esc(set.counsellorName)}" ${dis}></label>
         <div class="grid2">
           <label class="fld"><span>Current academic year</span><input class="input" name="academicYear" value="${esc(set.academicYear)}" pattern="\\d{4}-\\d{2}" ${dis}></label>
@@ -507,6 +508,12 @@
       ${canE && demoCount ? `<section class="card"><h2 class="card-t">${icon('sparkle')} Sample data</h2><p>${demoCount} sample students were added during setup.</p><button class="btn" id="demo-rm">${icon('trash')} Remove sample data</button></section>` : ''}
       ${CB.can('admin') ? `<section class="card danger-card"><h2 class="card-t">${icon('trash')} Danger zone</h2><p>Erase CounselBook and all data from this computer. Make a backup first.</p><button class="btn danger" id="erase">Erase everything…</button></section>` : ''}
       </div>`;
+    CB.logoPicker($('#set-lp', el), CB.META.logo, async (v) => {
+      if (v) CB.META.logo = v; else delete CB.META.logo;
+      await CB.saveMeta();
+      CB.audit(v ? 'Updated school logo' : 'Removed school logo'); CB.commit();
+      toast(v ? 'Logo updated' : 'Logo removed'); CB.renderShell(); CB.refresh();
+    }, !canE);
     if (!canE) return;
     const lines = (v) => String(v || '').split(/\r?\n/).map((x) => x.trim()).filter(Boolean);
     $('#set-school', el).onsubmit = async (e) => {

@@ -6,11 +6,13 @@
 
   // =============== FIRST-RUN SETUP ===============
   V.setup = function () {
+    let logo = null;
+    CB.applyLogo();
     document.body.className = 'auth';
     document.body.innerHTML = `<div class="bg-logo" aria-hidden="true"></div>
     <div class="auth-wrap">
       <div class="auth-card wide">
-        <img class="auth-logo" src="assets/logo.jpg" alt="School logo">
+        <img class="auth-logo" id="setup-logo" src="${CB.DEFAULT_LOGO}" alt="Logo">
         <h1 class="auth-title">Welcome to CounselBook</h1>
         <p class="auth-sub">One-time setup. Everything stays on this computer, encrypted.</p>
         <form id="setup-f" autocomplete="off">
@@ -19,6 +21,7 @@
             <label class="fld"><span>Name of the school *</span><input class="input" name="school" required placeholder="e.g. Green Valley Public School"></label>
             <label class="fld"><span>Motto (optional)</span><input class="input" name="motto" placeholder="e.g. Learn, Grow, Serve"></label>
           </div>
+          <div class="fld"><span>School logo (optional)</span><div id="setup-lp"></div></div>
           <h3 class="sec">Administrator login <small>can create logins and decide what each user sees</small></h3>
           <div class="grid3">
             <label class="fld"><span>Full name *</span><input class="input" name="aName" required value="Administrator"></label>
@@ -37,6 +40,7 @@
         </form>
       </div>
     </div>`;
+    CB.logoPicker($('#setup-lp'), null, (v) => { logo = v; $('#setup-logo').src = v || CB.DEFAULT_LOGO; });
     $('#setup-f').onsubmit = async (e) => {
       e.preventDefault();
       const f = formData(e.target);
@@ -56,6 +60,7 @@
           return { id, username: user.trim(), ...(await Store.wrapDEK(dek, pass)) };
         };
         const meta = { v: 1, school: f.school.trim(), created: Date.now(), users: [] };
+        if (logo) meta.logo = logo;
         meta.users.push(await mk(f.aName, f.aUser, f.aPass, 'admin'));
         meta.users.push(await mk(f.cName, f.cUser, f.cPass, 'counsellor'));
         meta.recovery = await Store.wrapDEK(dek, Store.normRecovery(recovery));
